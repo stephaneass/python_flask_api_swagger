@@ -1,8 +1,8 @@
 from app import app
-from models.userModel import User
+from models.userModel import Users
 
 
 @app.route('/users/register')
 def register():
-    user = User()
+    user = Users()
     return user.getName()

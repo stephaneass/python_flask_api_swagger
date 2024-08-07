@@ -2,11 +2,11 @@ from app import db
 from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
 
-class User(db.Model):
+class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
-    email = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(40), nullable=False)
+    email = db.Column(db.String(120), nullable=False, unique=True)
+    phone = db.Column(db.String(40), nullable=False, unique=True)
     role = db.Column(db.String(20), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -19,7 +19,7 @@ class User(db.Model):
     def password(self, pwd):
         self.password_hash = generate_password_hash(pwd)
 
-    def verify_password(self, pwd)
+    def verify_password(self, pwd):
         return check_password_hash(self.password_hash, pwd)
     
     # Create a String
