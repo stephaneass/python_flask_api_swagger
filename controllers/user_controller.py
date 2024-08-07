@@ -1,5 +1,8 @@
 from app import app
+from models.userModel import User
+
 
 @app.route('/users/register')
 def register():
-    return "This is the registration form"
+    user = User()
+    return user.getName()
