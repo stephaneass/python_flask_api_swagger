@@ -20,5 +20,31 @@ def register():
         # Return a nice message if validation fails
         return jsonify(err.messages), 400
 
-    #user = Users.getByEmail(request.form['email'])
-    return result['name']
+    user = Users.getByEmail(result['email'])
+    if user :
+        return jsonify({
+            "message":"Email already taken",
+        }), 201
+    
+    user = Users.getByPhone(result['phone'])
+    if user :
+        return jsonify({
+            "message":"Phone already taken",
+        }), 201
+    
+    user = Users.register(result)
+
+    if user :
+        return jsonify({
+            "message":"Registration done successfully",
+            "user" : {
+                "name": user.name,
+                "email": user.email,
+                "phone": user.phone,
+                "role": user.role
+            }
+        }), 201
+    
+    return jsonify({
+            "message":"An error occured",
+        }), 500

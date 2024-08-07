@@ -29,4 +29,19 @@ class Users(db.Model):
     def getByEmail(cls, email):
         return Users.query.filter_by(email = email).first()
     
+    def getByPhone(cls, phone):
+        return Users.query.filter_by(phone = phone).first()
+    
+    def register(cls, data):
+        user = Users(name = data['name'], email = data['email'], phone = data['phone'], 
+                     password = data['password'], role = 'user')
+        try :
+            db.session.add(user)
+            db.session.commit()
+            return user
+        except :
+            return None
+    
     getByEmail = classmethod(getByEmail)
+    getByPhone = classmethod(getByPhone)
+    register = classmethod(register)
