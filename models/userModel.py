@@ -26,5 +26,7 @@ class Users(db.Model):
     def __repr__(self):
         return '<Name %r>' % self.name
     
-    def getName(self):
-        return "My name is User"
+    def getByEmail(cls, email):
+        return Users.query.filter_by(email = email).first()
+    
+    getByEmail = classmethod(getByEmail)
