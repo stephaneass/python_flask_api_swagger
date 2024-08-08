@@ -1,15 +1,23 @@
-from app import db
+from app import app, db
 from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
+from flask_migrate import Migrate
+
+migrate = Migrate(app, db)
+
+class Roles(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    label = db.Column(db.String(20), nullable = False, unique = True)
+    users = db.relationship('Users', backref='role')
 
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     email = db.Column(db.String(120), nullable=False, unique=True)
     phone = db.Column(db.String(40), nullable=False, unique=True)
-    role = db.Column(db.String(20), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 
     @property
     def password(self):

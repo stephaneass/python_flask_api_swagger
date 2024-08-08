@@ -13,4 +13,5 @@ class UserSeeder(Seeder):
 
         for user in users_list:
             db.session.add(user)
-            db.session.commit()
+            
+        db.session.commit()
