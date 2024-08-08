@@ -10,6 +10,11 @@ class Roles(db.Model):
     label = db.Column(db.String(20), nullable = False, unique = True)
     users = db.relationship('Users', backref='role')
 
+    def getByLabel(cls, label):
+        return Roles.query.filter_by(label = label).first()
+    
+    getByLabel = classmethod(getByLabel)
+
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
@@ -41,8 +46,9 @@ class Users(db.Model):
         return Users.query.filter_by(phone = phone).first()
     
     def register(cls, data):
+        role = Roles.getByLabel(label = 'user')
         user = Users(name = data['name'], email = data['email'], phone = data['phone'], 
-                     password = data['password'], role = 'user')
+                     password = data['password'], role_id = role.id)
         try :
             db.session.add(user)
             db.session.commit()
