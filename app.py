@@ -17,6 +17,7 @@ db = SQLAlchemy(app)
 seeder = FlaskSeeder(app, db)
 
 from controllers import *
+
 @app.route("/")
 def index():
     return "You're on the index page"

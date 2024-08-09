@@ -1,62 +1,82 @@
 from app import app
-from flask import request, jsonify
-from json import dumps, loads
+from flask import jsonify, make_response
 from models.userModel import Users
-from marshmallow import Schema, fields, validate, ValidationError
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
+from marshmallow import ValidationError
+from flask_apispec import FlaskApiSpec, doc, use_kwargs
+from flask_jwt_extended import JWTManager, create_access_token
+from apispec.ext.marshmallow import MarshmallowPlugin
 from datetime import timedelta
+from swagger.schemas import Register
+from apispec import APISpec
 
+# Configuration de JWT
 app.config["JWT_SECRET_KEY"] = 'a Long TexTe Here caN yOu SeE IT?!=@'
 app.config['JWT_TOKEN_LOCATION'] = ['headers']
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=10)  # Durée de vie du token d'accès
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=1)
 
-# JWT Initialization
+# Configuration de l'application
+app.config.update({
+    'APISPEC_SPEC': APISpec(
+        title='Flask API with Swagger',
+        version='v1',
+        openapi_version='3.0.2',
+        plugins=[MarshmallowPlugin()],
+    ),
+    'APISPEC_SWAGGER_URL': '/swagger/',
+    'APISPEC_SWAGGER_UI_URL': '/swagger-ui/',  # Le chemin pour Swagger UI statique
+})
+
+# Initialisation de JWT
 jwt = JWTManager(app)
 
-class Register(Schema):
-    name = fields.String(required=True, validate=validate.Length(min=3))
-    phone = fields.String(required=True, validate=validate.Length(min=8))
-    email = fields.Email(required=True)
-    password = fields.String(required=True, validate=validate.Length(min=4))
+docs = FlaskApiSpec(app)
 
 @app.route('/users/register', methods=['POST'])
-def register():
-    data = request.json
+@doc(description='Enregistrer un nouvel utilisateur.')
+@use_kwargs(Register, location='json')
+def register(name, phone, email, password):
     schema = Register()
-    try: 
-        result = schema.load(data)
+    try:
+        result = schema.load({'name': name, 'phone': phone, 'email': email, 'password': password})
     except ValidationError as err:
-        # Return a nice message if validation fails
-        return jsonify(err.messages), 400
+        print(f"ValidationError: {err.messages}")
+        response = make_response(jsonify({
+            "message": "Erreur de validation",
+            "errors": err.messages
+        }), 400)
+        return response
 
-    user = Users.getByEmail(result['email'])
-    if user :
-        return jsonify({
-            "message":"Email already taken",
-        }), 201
+    # Vérification de l'existence de l'email
+    if Users.getByEmail(result['email']):
+        response = make_response(jsonify({"message": "Email déjà utilisé"}), 400)
+        return response
     
-    user = Users.getByPhone(result['phone'])
-    if user :
-        return jsonify({
-            "message":"Phone already taken",
-        }), 201
+    # Vérification de l'existence du téléphone
+    if Users.getByPhone(result['phone']):
+        response = make_response(jsonify({"message": "Téléphone déjà utilisé"}), 400)
+        return response
     
+    # Enregistrement de l'utilisateur
     user = Users.register(result)
 
-    if user :
+    if user:
         token = create_access_token(identity=user.id)
-        return jsonify({
-            "message":"Registration done successfully",
+        response = make_response(jsonify({
+            "message": "Enregistrement réussi",
             'access_token': token,
-            "user" : {
+            "user": {
                 "name": user.name,
                 "email": user.email,
                 "phone": user.phone,
                 "role": user.role.label
             }
-        }), 201
+        }), 201)
+        return response
     
-    return jsonify({
-            "message":"An error occured",
-        }), 500
+    response = make_response(jsonify({"message": "Une erreur est survenue"}), 500)
+    return response
+
+# Initialisation de Flask-APISpec pour la documentation Swagger
+
+docs.register(register)
