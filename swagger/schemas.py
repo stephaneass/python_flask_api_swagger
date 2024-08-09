@@ -3,7 +3,7 @@ from marshmallow import Schema, fields, validate
 # Marshmallow Schemas
 
 class UserSchema(Schema):
-    id = fields.Integer()
+    id = fields.Integer(dump_only=True)
     name = fields.String()
     email = fields.Email()
     phone = fields.String()
