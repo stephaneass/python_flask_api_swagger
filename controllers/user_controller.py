@@ -6,7 +6,7 @@ from flask_apispec import FlaskApiSpec, doc, use_kwargs
 from flask_jwt_extended import JWTManager, create_access_token
 from apispec.ext.marshmallow import MarshmallowPlugin
 from datetime import timedelta
-from swagger.schemas import Register
+from swagger.schemas import Register, RegisterResponse
 from apispec import APISpec
 
 # Configuration de JWT
@@ -33,7 +33,20 @@ jwt = JWTManager(app)
 docs = FlaskApiSpec(app)
 
 @app.route('/users/register', methods=['POST'])
-@doc(description='Enregistrer un nouvel utilisateur.')
+@doc(description='Enregistrer un nouvel utilisateur.',
+     responses={
+        201: {
+            'description': 'Registration successful',
+            'schema': RegisterResponse
+        },
+        400: {
+            'description': 'Bad request',
+        },
+        500: {
+            'description': 'Internal server error',
+        }
+    }
+     )
 @use_kwargs(Register, location='json')
 def register(name, phone, email, password):
     schema = Register()
